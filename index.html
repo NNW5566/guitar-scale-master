@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Scale Master Pro V4.5 - Interactive Practice</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --bg: #0a0c14;
+            --panel: #161a26;
+            --text: #f1f5f9;
+            --subtext: #94a3b8;
+            --root-color: #ef4444;
+            --scale-color: #3b82f6;
+            --fret: #334155;
+            --string: #64748b;
+            --accent: #22c55e;
+            --warning: #f87171;
+            --highlight: #fbbf24;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .app-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .app-header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(90deg, #f1f5f9, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .app-header .subtitle {
+            color: var(--subtext);
+            font-size: 13px;
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+        
+        /* 右上角多功能計時器 */
+        #timer-box {
+            position: fixed;
+            top: 12px;
+            right: 16px;
+            background: var(--panel);
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            z-index: 100;
+            min-width: 128px;
+        }
+        
+        #display-time {
+            font-family: 'Space Grotesk', 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1.5px;
+            transition: color 0.3s;
+        }
+        
+        .timer-ended {
+            color: var(--warning) !important;
+            animation: blink 0.8s infinite;
+        }
+        
+        .timer-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .timer-btn {
+            background: #252a3d;
+            border: 1px solid #475569;
+            color: var(--subtext);
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .timer-btn:hover {
+            background: #3b425e;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .timer-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 28px;
+        }
+        
+        .controls {
+            background: var(--panel);
+            padding: 22px 26px;
+            border-radius: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            align-items: flex-end;
+            margin-bottom: 18px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 120px;
+        }
+        
+        label {
+            color: var(--subtext);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        select, .action-btn {
+            background: #252a3d;
+            color: white;
+            border: 1px solid #475569;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        select:hover, .action-btn:hover {
+            border-color: #64748b;
+        }
+        
+        .action-btn {
+            background: #1e2937;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+        
+        .action-btn:hover {
+            background: #334155;
+            color: #22c55e;
+        }
+        
+        .random-options {
+            display: flex;
+            gap: 4px;
+            background: #252a3d;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid #475569;
+        }
+        
+        .random-opt-btn {
+            background: transparent;
+            border: none;
+            color: var(--subtext);
+            padding: 7px 13px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        
+        .random-opt-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.08);
+        }
+        
+        .random-opt-btn.active {
+            background: #6366f1;
+            color: white;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-group {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #475569;
+        }
+        
+        .btn-group button {
+            border: none;
+            background: #252a3d;
+            color: var(--subtext);
+            padding: 9px 18px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .btn-group button.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .fretboard-card {
+            background: linear-gradient(145deg, #1a1e2a, #161a26);
+            padding: 32px 18px 22px 18px;
+            border-radius: 18px;
+            overflow-x: auto;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+            border: 1px solid #334155;
+            position: relative;
+        }
+        
+        .fretboard {
+            display: flex;
+            flex-direction: column;
+            min-width: 1020px;
+            position: relative;
+            z-index: 3;
+        }
+        
+        .string {
+            display: flex;
+            position: relative;
+            align-items: center;
+            transition: height 0.3s ease;
+        }
+        
+        .string::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2.5px;
+            background: linear-gradient(to right, #64748b, #94a3b8, #64748b);
+            z-index: 1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        
+        .fret {
+            flex: 1;
+            border-right: 2px solid #475569;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            height: 100%;
+            min-width: 62px;
+            transition: background 0.2s;
+        }
+        
+        .fret:nth-child(1) {
+            border-right: 7px solid #64748b;
+            background: rgba(148, 163, 184, 0.06);
+        }
+        
+        .fret:hover {
+            background: rgba(59, 130, 246, 0.06);
+        }
+        
+        .note {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 800;
+            z-index: 5;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.23, 1.0, 0.32, 1);
+            user-select: none;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+        
+        .note:hover {
+            transform: scale(1.15);
+        }
+        
+        .note-root {
+            background: var(--root-color);
+            color: white;
+            font-size: 14px;
+        }
+        
+        .note-scale {
+            background: var(--scale-color);
+            color: white;
+        }
+        
+        .note.highlight {
+            animation: notePop 0.3s ease;
+        }
+        
+        @keyframes notePop {
+            0% { transform: scale(0.6); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        .fret-numbers {
+            display: flex;
+            min-width: 1020px;
+            margin-top: 8px;
+            padding-left: 2px;
+        }
+        
+        .fret-num {
+            flex: 1;
+            text-align: center;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        #formulaBox {
+            margin-left: auto;
+            color: #94a3b8;
+            font-size: 12.5px;
+            padding: 7px 13px;
+            background: rgba(15, 23, 42, 0.45);
+            border-radius: 8px;
+            border: 1px solid #334155;
+            font-family: 'Inter', system-ui, sans-serif;
+            white-space: nowrap;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+        
+        .string-label {
+            position: absolute;
+            left: -52px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 700;
+            width: 44px;
+            text-align: right;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .current-scale-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .inlay-dot {
+            position: absolute;
+            background: #475569;
+            border-radius: 50%;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.1),
+                        0 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+        
+        .fretboard-wrapper {
+            position: relative;
+            padding-left: 58px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 右上角計時器 -->
+    <div id="timer-box">
+        <div id="display-time">00:00</div>
+        <div class="timer-controls">
+            <button class="timer-btn" onclick="setTimer(0)">Stopwatch</button>
+            <button class="timer-btn" onclick="setTimer(15)">15m</button>
+            <button class="timer-btn" onclick="setTimer(30)">30m</button>
+            <button class="timer-btn" onclick="setTimer(45)">45m</button>
+        </div>
+        <div class="timer-controls" style="margin-top: 4px; gap: 8px;">
+            <button class="timer-btn" onclick="toggleTimer()" style="font-size:14px; padding:5px 10px;">⏯️</button>
+            <button class="timer-btn" onclick="resetTimer()" style="font-size:14px; padding:5px 10px;">↺</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- 當前選擇顯示 -->
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px; padding-left:6px;">
+            <div id="currentScaleBadge" class="current-scale-badge">
+                <span id="currentScaleText">C Major</span>
+            </div>
+            <button onclick="handleRandom('both')" class="action-btn" style="padding:6px 14px; font-size:12px;">
+                🎲 Random
+            </button>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Root Note</label>
+                <select id="rootSelect"></select>
+            </div>
+            
+            <div class="control-group">
+                <label>Scale Type</label>
+                <select id="scaleSelect"></select>
+            </div>
+            
+            <div class="control-group">
+                <label>Display Mode</label>
+                <div class="btn-group">
+                    <button id="viewNotes" class="active" style="border-radius: 8px 0 0 8px;">Notes</button>
+                    <button id="viewIntervals" style="border-radius: 0 8px 8px 0;">Intervals</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Randomize</label>
+                <div class="random-options">
+                    <button class="random-opt-btn" data-mode="root" onclick="handleRandom('root')">Root</button>
+                    <button class="random-opt-btn" data-mode="scale" onclick="handleRandom('scale')">Scale</button>
+                    <button class="random-opt-btn active" data-mode="both" onclick="handleRandom('both')">Both</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Metronome</label>
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <input type="number" id="bpmInput" value="120" min="40" max="240" step="5" style="width:58px; background:#252a3d; border:1px solid #475569; color:white; padding:5px 6px; border-radius:6px; font-size:13px; text-align:center;">
+                    <span style="font-size:10px; color:#64748b; font-weight:600;">BPM</span>
+                    <button id="metroBtn" class="timer-btn" style="padding:5px 10px; font-size:11px;" onclick="toggleMetronome()">Start</button>
+                    <div id="beatIndicator" style="width:16px; height:16px; border-radius:50%; background:#475569; transition: all 0.08s ease; box-shadow: 0 0 5px #475569; flex-shrink:0;"></div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Mode</label>
+                <div class="btn-group">
+                    <button id="modeScale" class="active" style="border-radius: 8px 0 0 8px;" onclick="setMode('scale')">Scale View</button>
+                    <button id="modeChord" style="border-radius: 0 8px 8px 0;" onclick="setMode('chord')">Chord Builder</button>
+                </div>
+            </div>
+            
+            <div id="formulaBox"></div>
+        </div>
+
+        <div class="fretboard-card">
+            <div class="fretboard-wrapper">
+                <div class="fretboard" id="fretboard"></div>
+                <div class="fret-numbers" id="fretMarkers"></div>
+                
+                <!-- 弦名標籤 -->
+                <div id="stringLabels" style="position:absolute; left:0; top:20px; height:calc(100% - 50px); display:flex; flex-direction:column; justify-content:space-around; z-index:10; pointer-events:none;">
+                    <!-- 動態生成 -->
+                </div>
+            </div>
+            
+            <!-- 指板鑲嵌點 -->
+            <div id="inlays" style="position:absolute; top:50%; left:58px; width:calc(100% - 76px); height:18px; transform:translateY(-50%); z-index:2; pointer-events:none;"></div>
+        </div>
+        
+        <!-- Chord Analysis Result (single line) -->
+        <div id="chordResult" style="display: none; margin-top: 14px; background: rgba(15,23,42,0.6); border: 1px solid #475569; border-radius: 12px; padding: 10px 18px;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <div>
+                    <span style="font-size: 11px; color: #64748b;">Selected</span>
+                    <span id="selectedNotesText" style="font-size: 15px; color: #e2e8f0; font-weight: 700; margin-left: 6px;">—</span>
+                </div>
+                <div style="width: 1px; height: 18px; background: #475569;"></div>
+                <div>
+                    <span style="font-size: 11px; color: #64748b;">Chord</span>
+                    <span id="chordName" style="font-size: 18px; font-weight: 800; color: #a855f7; margin-left: 6px;">—</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tip removed per request -->
+    </div>
+
+<script>
+    // ==================== 常數與資料 ====================
+    const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const INTERVALS = ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7'];
+    const TUNING = ['E', 'B', 'G', 'D', 'A', 'E']; // 高音弦到低音弦
+    const STRING_OPEN_NOTES = ['E4', 'B3', 'G3', 'D3', 'A2', 'E2']; // 帶八度，供音頻使用
+    
+    const SCALES = {
+        "Major": { pattern: [0, 2, 4, 5, 7, 9, 11], formula: "1 • 2 • 3 • 4 • 5 • 6 • 7" },
+        "Natural Minor": { pattern: [0, 2, 3, 5, 7, 8, 10], formula: "1 • 2 • ♭3 • 4 • 5 • ♭6 • ♭7" },
+        "Major Pentatonic": { pattern: [0, 2, 4, 7, 9], formula: "1 • 2 • 3 • 5 • 6" },
+        "Minor Pentatonic": { pattern: [0, 3, 5, 7, 10], formula: "1 • ♭3 • 4 • 5 • ♭7" },
+        "Blues": { pattern: [0, 3, 5, 6, 7, 10], formula: "1 • ♭3 • 4 • ♭5 • 5 • ♭7" },
+        "Dorian": { pattern: [0, 2, 3, 5, 7, 9, 10], formula: "1 • 2 • ♭3 • 4 • 5 • 6 • ♭7" },
+        "Mixolydian": { pattern: [0, 2, 4, 5, 7, 9, 10], formula: "1 • 2 • 3 • 4 • 5 • 6 • ♭7" },
+        "Harmonic Minor": { pattern: [0, 2, 3, 5, 7, 8, 11], formula: "1 • 2 • ♭3 • 4 • 5 • ♭6 • 7" },
+        "Lydian": { pattern: [0, 2, 4, 6, 7, 9, 11], formula: "1 • 2 • 3 • ♯4 • 5 • 6 • 7" },
+        "Phrygian": { pattern: [0, 1, 3, 5, 7, 8, 10], formula: "1 • ♭2 • ♭3 • 4 • 5 • ♭6 • ♭7" }
+    };
+
+    // 狀態變數
+    let currentRoot = 'C';
+    let currentScale = 'Major';
+    let displayMode = 'Notes';
+    let currentMode = 'scale'; // 'scale' or 'chord'
+    let selectedPositions = new Set(); // "stringIdx-fret" e.g. "4-3" for exact position
+    let timerState = 'stopped';
+    let timeLeft = 0;
+    let isCountdown = false;
+    let timerInterval = null;
+    let audioCtx = null;
+
+    // ==================== 工具函數 ====================
+    function getAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        return audioCtx;
+    }
+
+    function playTone(frequency, duration = 0.6, type = 'sawtooth') {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        osc.type = type;
+        osc.frequency.value = frequency;
+        
+        filter.type = 'lowpass';
+        filter.frequency.value = 1400;
+        
+        const now = ctx.currentTime;
+        gain.gain.value = 0.28;
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start(now);
+        osc.stop(now + duration + 0.05);
+    }
+
+    function getNoteFrequency(noteWithOctave) {
+        const noteMap = { 'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5, 'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11 };
+        const match = noteWithOctave.match(/([A-G]#?)(\d)/);
+        if (!match) return 440;
+        
+        const [, note, octStr] = match;
+        const oct = parseInt(octStr);
+        const semi = noteMap[note];
+        const semitonesFromA4 = semi + (oct - 4) * 12 - 9;
+        return 440 * Math.pow(2, semitonesFromA4 / 12);
+    }
+
+    function getSimpleScaleFreq(note) {
+        // 簡單版本：以 C4 為基準
+        const semiFromC = NOTES.indexOf(note);
+        return 261.63 * Math.pow(2, semiFromC / 12);
+    }
+
+    function playBeep(freq = 880, duration = 0.4) {
+        playTone(freq, duration, 'sine');
+    }
+
+    // ==================== 儲存設定 ====================
+    function saveSettings() {
+        localStorage.setItem('guitarScaleProSettings', JSON.stringify({
+            root: currentRoot,
+            scale: currentScale,
+            display: displayMode
+        }));
+    }
+
+    function loadSettings() {
+        const saved = localStorage.getItem('guitarScaleProSettings');
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.root && NOTES.includes(data.root)) currentRoot = data.root;
+            if (data.scale && SCALES[data.scale]) currentScale = data.scale;
+            if (data.display) displayMode = data.display;
+        }
+    }
+
+    // ==================== 計時器 ====================
+    function updateTimerDisplay() {
+        const absTime = Math.abs(timeLeft);
+        const m = Math.floor(absTime / 60).toString().padStart(2, '0');
+        const s = (absTime % 60).toString().padStart(2, '0');
+        const display = document.getElementById('display-time');
+        display.innerText = `${m}:${s}`;
+        
+        if (timerState === 'running' && isCountdown && timeLeft <= 0) {
+            display.classList.add('timer-ended');
+        } else {
+            display.classList.remove('timer-ended');
+        }
+    }
+
+    function startTimerLogic() {
+        if (timerInterval) clearInterval(timerInterval);
+        
+        timerInterval = setInterval(() => {
+            if (timerState !== 'running') return;
+            
+            if (isCountdown) {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                } else {
+                    timerState = 'paused';
+                    document.getElementById('display-time').classList.add('timer-ended');
+                    playBeep(880, 0.6);
+                    setTimeout(() => playBeep(660, 0.5), 180);
+                }
+            } else {
+                timeLeft++;
+            }
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function setTimer(mins) {
+        if (timerInterval) clearInterval(timerInterval);
+        
+        timerState = 'running';
+        document.getElementById('display-time').classList.remove('timer-ended');
+        document.getElementById('display-time').style.opacity = '1';
+        
+        if (mins === 0) {
+            timeLeft = 0;
+            isCountdown = false;
+        } else {
+            timeLeft = mins * 60;
+            isCountdown = true;
+        }
+        
+        updateTimerDisplay();
+        startTimerLogic();
+    }
+
+    function toggleTimer() {
+        const display = document.getElementById('display-time');
+        
+        if (timerState === 'running') {
+            timerState = 'paused';
+            display.style.opacity = '0.55';
+        } else {
+            timerState = 'running';
+            display.style.opacity = '1';
+            
+            if (!timerInterval || timeLeft === 0 && !isCountdown) {
+                // 如果完全停止，預設啟動秒錶
+                if (timeLeft === 0 && !isCountdown) {
+                    isCountdown = false;
+                }
+                startTimerLogic();
+            }
+        }
+    }
+
+    function resetTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerState = 'stopped';
+        timeLeft = 0;
+        isCountdown = false;
+        
+        const display = document.getElementById('display-time');
+        display.classList.remove('timer-ended');
+        display.style.opacity = '1';
+        display.innerText = '00:00';
+    }
+
+    // ==================== 隨機模式 ====================
+    function handleRandom(type) {
+        // 更新按鈕狀態
+        document.querySelectorAll('.random-opt-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === type);
+        });
+        
+        if (type === 'root' || type === 'both') {
+            currentRoot = NOTES[Math.floor(Math.random() * NOTES.length)];
+            document.getElementById('rootSelect').value = currentRoot;
+        }
+        
+        if (type === 'scale' || type === 'both') {
+            const keys = Object.keys(SCALES);
+            currentScale = keys[Math.floor(Math.random() * keys.length)];
+            document.getElementById('scaleSelect').value = currentScale;
+        }
+        
+        saveSettings();
+        render();
+    }
+
+    // ==================== CHORD BUILDER ====================
+    function setMode(mode) {
+        currentMode = mode;
+        updateModeUI();
+        
+        const formula = document.getElementById('formulaBox');
+        const badge = document.getElementById('currentScaleBadge');
+        
+        if (mode === 'chord') {
+            document.getElementById('chordResult').style.display = 'block';
+            if (formula) formula.style.display = 'none';
+            if (badge) badge.style.display = 'none';
+            updateChordAnalysis();
+        } else {
+            document.getElementById('chordResult').style.display = 'none';
+            if (formula) formula.style.display = '';
+            if (badge) badge.style.display = '';
+        }
+        
+        render();
+    }
+
+    function updateModeUI() {
+        const scaleBtn = document.getElementById('modeScale');
+        const chordBtn = document.getElementById('modeChord');
+        if (scaleBtn) scaleBtn.classList.toggle('active', currentMode === 'scale');
+        if (chordBtn) chordBtn.classList.toggle('active', currentMode === 'chord');
+    }
+
+    function updateChordAnalysis() {
+        // Extract unique note indices from selected positions
+        const semis = new Set();
+        selectedPositions.forEach(pos => {
+            const [strIdx, fr] = pos.split('-').map(Number);
+            const openNote = TUNING[strIdx];
+            const startIdx = NOTES.indexOf(openNote);
+            const nIdx = (startIdx + fr) % 12;
+            semis.add(nIdx);
+        });
+        
+        const selected = Array.from(semis).sort((a,b) => a - b);
+        const textEl = document.getElementById('selectedNotesText');
+        const chordEl = document.getElementById('chordName');
+        
+        if (!textEl || !chordEl) return;
+        
+        if (selected.length === 0) {
+            textEl.innerText = '—';
+            chordEl.innerText = '—';
+            chordEl.style.color = '#64748b';
+            return;
+        }
+        
+        const noteNames = selected.map(i => NOTES[i]);
+        textEl.innerText = noteNames.join(' ');
+        
+        const chordName = detectChord(selected);
+        chordEl.innerText = chordName;
+        chordEl.style.color = '#a855f7';
+    }
+
+    function detectChord(semis) {
+        if (semis.length < 2) return '—';
+        
+        const unique = [...new Set(semis)].sort((a,b)=>a-b);
+        const root = unique[0];
+        const intervals = unique.map(n => (n - root + 12) % 12);
+        const intSet = new Set(intervals);
+        
+        // Triads & 7ths (most common)
+        if (intSet.has(0) && intSet.has(4) && intSet.has(7)) {
+            if (intSet.has(10)) return NOTES[root] + '7';
+            if (intSet.has(11)) return NOTES[root] + 'maj7';
+            if (intSet.has(9)) return NOTES[root] + '6';
+            return NOTES[root] + ' Major';
+        }
+        if (intSet.has(0) && intSet.has(3) && intSet.has(7)) {
+            if (intSet.has(10)) return NOTES[root] + 'm7';
+            if (intSet.has(9)) return NOTES[root] + 'm6';
+            return NOTES[root] + ' Minor';
+        }
+        if (intSet.has(0) && intSet.has(3) && intSet.has(6)) {
+            return NOTES[root] + '° (dim)';
+        }
+        if (intSet.has(0) && intSet.has(4) && intSet.has(8)) {
+            return NOTES[root] + '+ (aug)';
+        }
+        if (intSet.has(0) && intSet.has(5) && intSet.has(7)) {
+            return NOTES[root] + 'sus4';
+        }
+        if (intSet.has(0) && intSet.has(2) && intSet.has(7)) {
+            return NOTES[root] + 'sus2';
+        }
+        
+        // More complex
+        if (intervals.length === 4) {
+            if (intSet.has(0) && intSet.has(4) && intSet.has(7) && intSet.has(10)) return NOTES[root] + '7';
+            if (intSet.has(0) && intSet.has(3) && intSet.has(7) && intSet.has(10)) return NOTES[root] + 'm7';
+        }
+        
+        return NOTES[root] + ' (custom)';
+    }
+
+    function toggleChordNote(stringIdx, fret) {
+        const key = `${stringIdx}-${fret}`;
+        if (selectedPositions.has(key)) {
+            selectedPositions.delete(key);
+        } else {
+            selectedPositions.add(key);
+        }
+        updateChordAnalysis();
+        render();
+    }
+
+    // ==================== METRONOME ====================
+    let metronomeInterval = null;
+    let isMetronomePlaying = false;
+    let currentBeat = 0;
+
+    function playMetronomeClick(isAccent) {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        osc.type = 'square';
+        osc.frequency.value = isAccent ? 1800 : 1100;
+        filter.type = 'highpass';
+        filter.frequency.value = 700;
+        
+        const now = ctx.currentTime;
+        gain.gain.value = isAccent ? 0.35 : 0.25;
+        gain.gain.setValueAtTime(gain.gain.value, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.07);
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.09);
+    }
+
+    function flashBeatIndicator(isAccent) {
+        const ind = document.getElementById('beatIndicator');
+        if (!ind) return;
+        ind.style.background = isAccent ? '#22c55e' : '#3b82f6';
+        ind.style.boxShadow = isAccent ? '0 0 14px #22c55e' : '0 0 10px #3b82f6';
+        setTimeout(() => {
+            if (isMetronomePlaying && ind) {
+                ind.style.background = '#475569';
+                ind.style.boxShadow = '0 0 5px #475569';
+            }
+        }, 90);
+    }
+
+    function toggleMetronome() {
+        const btn = document.getElementById('metroBtn');
+        const input = document.getElementById('bpmInput');
+        if (!btn || !input) return;
+        
+        if (isMetronomePlaying) {
+            clearInterval(metronomeInterval);
+            isMetronomePlaying = false;
+            currentBeat = 0;
+            btn.innerText = 'Start';
+            btn.style.background = '#252a3d';
+            btn.style.color = '#94a3b8';
+            const ind = document.getElementById('beatIndicator');
+            if (ind) {
+                ind.style.background = '#475569';
+                ind.style.boxShadow = '0 0 5px #475569';
+            }
+        } else {
+            let bpmVal = parseInt(input.value);
+            if (!bpmVal || bpmVal < 40) bpmVal = 40;
+            if (bpmVal > 240) bpmVal = 240;
+            input.value = bpmVal;
+            
+            const intervalMs = Math.round(60000 / bpmVal);
+            currentBeat = 0;
+            isMetronomePlaying = true;
+            btn.innerText = 'Stop';
+            btn.style.background = '#22c55e';
+            btn.style.color = 'white';
+            
+            // Immediate first beat (accent)
+            playMetronomeClick(true);
+            flashBeatIndicator(true);
+            
+            metronomeInterval = setInterval(() => {
+                currentBeat = (currentBeat + 1) % 4;
+                const isAccent = (currentBeat === 0);
+                playMetronomeClick(isAccent);
+                flashBeatIndicator(isAccent);
+            }, intervalMs);
+        }
+    }
+
+    // ==================== 渲染指板 ====================
+    function renderMarkers() {
+        const container = document.getElementById('fretMarkers');
+        container.innerHTML = '';
+        
+        for (let i = 0; i <= 15; i++) {
+            const div = document.createElement('div');
+            div.className = 'fret-num';
+            div.innerText = i;
+            container.appendChild(div);
+        }
+    }
+
+    function addInlays() {
+        const container = document.getElementById('inlays');
+        container.innerHTML = '';
+        
+        const inlayFrets = [3, 5, 7, 9, 12, 15];
+        const fretCount = 16;
+        const fretWidthPercent = 100 / fretCount;
+        
+        inlayFrets.forEach(fret => {
+            if (fret === 12) {
+                // Double dot at 12th fret
+                const dot1 = createInlayDot((fret + 0.28) * fretWidthPercent, 5);
+                const dot2 = createInlayDot((fret + 0.72) * fretWidthPercent, 5);
+                container.appendChild(dot1);
+                container.appendChild(dot2);
+            } else {
+                const dot = createInlayDot((fret + 0.5) * fretWidthPercent, 6);
+                container.appendChild(dot);
+            }
+        });
+    }
+
+    function createInlayDot(leftPercent, size) {
+        const dot = document.createElement('div');
+        dot.className = 'inlay-dot';
+        dot.style.left = `${leftPercent}%`;
+        dot.style.top = '50%';
+        dot.style.width = `${size}px`;
+        dot.style.height = `${size}px`;
+        dot.style.transform = 'translate(-50%, -50%)';
+        return dot;
+    }
+
+    function renderStringLabels() {
+        const container = document.getElementById('stringLabels');
+        container.innerHTML = '';
+        
+        const labels = ['E', 'B', 'G', 'D', 'A', 'E'];
+        
+        labels.forEach((label, i) => {
+            const div = document.createElement('div');
+            div.style.cssText = `height: ${32 + i * 4}px; display:flex; align-items:center; justify-content:flex-end; padding-right:6px;`;
+            div.innerHTML = `<span style="font-size:9.5px; color:#64748b; font-weight:700; opacity:0.85;">${label}</span>`;
+            container.appendChild(div);
+        });
+    }
+
+    function render() {
+        const board = document.getElementById('fretboard');
+        board.innerHTML = '';
+        
+        const scaleData = SCALES[currentScale];
+        const rootIdx = NOTES.indexOf(currentRoot);
+        const activeIndices = scaleData.pattern.map(p => (rootIdx + p) % 12);
+        
+        // 更新標題與公式
+        document.getElementById('currentScaleText').innerText = `${currentRoot} ${currentScale}`;
+        document.getElementById('formulaBox').innerHTML = `
+            <span style="color:#64748b; font-weight:600; font-size:11px;">Formula</span>
+            <span style="color:#e2e8f0; font-family:'Inter', system-ui, sans-serif; font-weight:800; letter-spacing:0.8px; font-size:13px;">${scaleData.formula}</span>
+        `;
+        
+        const fragment = document.createDocumentFragment();
+        
+        TUNING.forEach((openNote, stringIdx) => {
+            const row = document.createElement('div');
+            row.className = 'string';
+            
+            // 動態弦粗細（低音弦較粗）
+            const height = 32 + stringIdx * 4;
+            row.style.height = `${height}px`;
+            row.style.minHeight = `${height}px`;
+            
+            const startIdx = NOTES.indexOf(openNote);
+            
+            for (let f = 0; f <= 15; f++) {
+                const fret = document.createElement('div');
+                fret.className = 'fret';
+                
+                const nIdx = (startIdx + f) % 12;
+                
+                if (currentMode === 'chord') {
+                    // Chord Builder: clickable on every fret, only show exact clicked position
+                    fret.style.cursor = 'pointer';
+                    const posKey = `${stringIdx}-${f}`;
+                    
+                    if (selectedPositions.has(posKey)) {
+                        const dot = document.createElement('div');
+                        dot.className = 'note';
+                        dot.style.background = '#a855f7';
+                        dot.style.boxShadow = '0 0 18px #a855f7, inset 0 1px 0 rgba(255,255,255,0.3)';
+                        dot.style.border = '2px solid #c084fc';
+                        dot.innerText = NOTES[nIdx];
+                        
+                        dot.dataset.note = NOTES[nIdx];
+                        dot.dataset.fret = f;
+                        dot.dataset.string = stringIdx;
+                        
+                        // Click to toggle this exact position + play sound
+                        dot.onclick = (e) => {
+                            e.stopImmediatePropagation();
+                            toggleChordNote(stringIdx, f);
+                            const freq = getNoteFrequency(STRING_OPEN_NOTES[stringIdx]) * Math.pow(2, f / 12);
+                            playTone(freq, 0.6, 'sawtooth');
+                        };
+                        
+                        fret.appendChild(dot);
+                    } else {
+                        // Empty but clickable cell
+                        fret.onclick = () => {
+                            toggleChordNote(stringIdx, f);
+                        };
+                        
+                        // Subtle hover hint
+                        fret.onmouseenter = () => {
+                            fret.style.background = 'rgba(168, 85, 247, 0.08)';
+                        };
+                        fret.onmouseleave = () => {
+                            fret.style.background = '';
+                        };
+                    }
+                } else {
+                    // Normal Scale View
+                    if (activeIndices.includes(nIdx)) {
+                        const dot = document.createElement('div');
+                        dot.className = `note ${nIdx === rootIdx ? 'note-root' : 'note-scale'}`;
+                        dot.innerText = (displayMode === 'Notes') 
+                            ? NOTES[nIdx] 
+                            : INTERVALS[(nIdx - rootIdx + 12) % 12];
+                        
+                        dot.dataset.note = NOTES[nIdx];
+                        dot.dataset.fret = f;
+                        dot.dataset.string = stringIdx;
+                        
+                        dot.onclick = (e) => {
+                            e.stopImmediatePropagation();
+                            const freq = getNoteFrequency(STRING_OPEN_NOTES[stringIdx]) * Math.pow(2, f / 12);
+                            playTone(freq, 0.75, 'sawtooth');
+                            
+                            dot.style.transform = 'scale(1.35)';
+                            setTimeout(() => {
+                                dot.style.transform = '';
+                            }, 180);
+                        };
+                        
+                        fret.appendChild(dot);
+                    }
+                }
+                
+                row.appendChild(fret);
+            }
+            
+            fragment.appendChild(row);
+        });
+        
+        board.appendChild(fragment);
+        
+        // 更新按鈕狀態
+        document.getElementById('viewNotes').classList.toggle('active', displayMode === 'Notes');
+        document.getElementById('viewIntervals').classList.toggle('active', displayMode === 'Intervals');
+        
+        saveSettings();
+    }
+
+    function updateUI() {
+        render();
+    }
+
+    // ==================== 初始化 ====================
+    function init() {
+        // 載入設定
+        loadSettings();
+        
+        // 初始化下拉選單
+        const rootSelect = document.getElementById('rootSelect');
+        NOTES.forEach(n => {
+            const opt = new Option(n, n);
+            rootSelect.add(opt);
+        });
+        rootSelect.value = currentRoot;
+        rootSelect.onchange = (e) => {
+            currentRoot = e.target.value;
+            saveSettings();
+            render();
+        };
+        
+        const scaleSelect = document.getElementById('scaleSelect');
+        Object.keys(SCALES).forEach(s => {
+            const opt = new Option(s, s);
+            scaleSelect.add(opt);
+        });
+        scaleSelect.value = currentScale;
+        scaleSelect.onchange = (e) => {
+            currentScale = e.target.value;
+            saveSettings();
+            render();
+        };
+        
+        // 顯示模式切換
+        document.getElementById('viewNotes').onclick = () => {
+            displayMode = 'Notes';
+            updateUI();
+        };
+        
+        document.getElementById('viewIntervals').onclick = () => {
+            displayMode = 'Intervals';
+            updateUI();
+        };
+        
+        // Mode buttons initial state
+        updateModeUI();
+        document.getElementById('chordResult').style.display = 'none';
+        
+        // 渲染指板相關
+        renderMarkers();
+        addInlays();
+        renderStringLabels();
+        
+        // 初始渲染
+        render();
+        
+        // Start default stopwatch (pausable)
+        setTimeout(() => {
+            if (timerState === 'stopped') {
+                setTimer(0);
+            }
+        }, 800);
+        
+        // Metronome BPM live update
+        const bpmInput = document.getElementById('bpmInput');
+        if (bpmInput) {
+            bpmInput.onchange = () => {
+                if (isMetronomePlaying) {
+                    toggleMetronome();
+                    setTimeout(() => toggleMetronome(), 60);
+                }
+            };
+        }
+        
+        console.log('%c[Guitar Scale Master Pro V4.5] Optimized version loaded', 'color:#64748b');
+    }
+
+    // 啟動應用
+    window.onload = init;
+</script>
+</body>
+</html>
